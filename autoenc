@@ -423,6 +423,8 @@ process() {
 set_codec() {
   codec=x264
   [[ "$1" =~ /to_process/([^/]*)/ ]] && {
+    LogDebug "parsed potential codec ${BASH_REMATCH[1]} from $1"
+    LogDebug "testing processor `declare -F enc_${BASH_REMATCH[1]}`"
     declare -F enc_${BASH_REMATCH[1]} >& /dev/null && {
       codec=${BASH_REMATCH[1]}
     }
