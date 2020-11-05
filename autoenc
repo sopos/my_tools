@@ -33,8 +33,8 @@ for ((i=0; i<10; i++)); do
 done
 
 [[ "$1" != "reload" ]] && {
-  Log "updating the script"
-  git -C $(dirname `readlink -e $0`) pull
+  LogDebug "updating the script"
+  git_out="$(git -C $(dirname `readlink -e $0`) pull)" || echo "$git_out"
   exec $0 reload
 }
 
