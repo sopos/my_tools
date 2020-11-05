@@ -10,8 +10,14 @@ LogDebug(){
 }
 
 ( which HandBrakeCLI && which ffmpeg && which ps && which pidof && which mediainfo && which bc && which nice && which find && which grep ) > /dev/null 2>&1 || {
-  Log "following tools need to be installed: HandBrakeCLI. ffmpeg, ps, pidof, mediainfo, bc, nice, find, and grep" >&2
+  Log "following tools need to be installed: HandBrakeCLI. ffmpeg, git, ps, pidof, mediainfo, bc, nice, find, and grep" >&2
   exit
+}
+
+[[ "$1" != "reload" ]] && {
+  Log "updating the script"
+  git -C $(dirname `readlink -e $0`) pull
+  exec $0 reload
 }
 
 # lock
