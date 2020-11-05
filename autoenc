@@ -14,12 +14,6 @@ LogDebug(){
   exit
 }
 
-[[ "$1" != "reload" ]] && {
-  Log "updating the script"
-  git -C $(dirname `readlink -e $0`) pull
-  exec $0 reload
-}
-
 # lock
 lock_file=/tmp/autoenc.lock
 # check a lock
@@ -37,6 +31,13 @@ for ((i=0; i<10; i++)); do
   }
   sleep 0.25
 done
+
+[[ "$1" != "reload" ]] && {
+  Log "updating the script"
+  git -C $(dirname `readlink -e $0`) pull
+  exec $0 reload
+}
+
 # create a lock
 echo "$$" > $lock_file
 
