@@ -490,6 +490,12 @@ TimeToSeconds() {
   echo $(( 10#$1*3600+10#$2*60+10#$3 ))
 }
 start=$(date +%s)
+_done_prev=(0)
+elapsed_prev=(0)
+for i in {1..100}; do
+  _done_prev+=(0)
+  elapsed_prev+=(0)
+done
 process "$movie" 2>&1 | tr '\r' '\n' | while read -r line; do
   [[ $duration -eq 10 && "$line" =~ Duration:\ ([0-9]{2}):([0-9]{2}):([0-9]{2}) ]] && {
     duration=$(TimeToSeconds ${BASH_REMATCH[*]:1})
@@ -510,15 +516,35 @@ process "$movie" 2>&1 | tr '\r' '\n' | while read -r line; do
       _done=$(( $(TimeToSeconds ${BASH_REMATCH[*]:1})*100/$duration ))
     fi
     elapsed=$(( $(date +%s) - start ))
-    [[ ${_done} -eq 0 ]] && {
-      eta=0
-    } || {
-      eta=$(( 100 * $elapsed * (100-${_done}) / ${_done} / 100 ))
+    [[ ${_done} -lt ${_done_prev} ]] && {
+      _done_prev=(0)
+      elapsed_prev=(0)
+      for i in {1..100}; do
+        _done_prev+=(0)
+        elapsed_prev+=(0)
+      done
     }
-    printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, ETA %2dd,%02d:%02d:%02d" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($eta/(3600*24))) $(($eta%(3600*24)/3600)) $(($eta%3600/60)) $(($eta%60))
-    [[ "${_done}" != "$b" ]] && {
-      Log "$p, $line"
-      b="${_done}"
+    go_back=0
+    while [[ $go_back -lt 100 && $(( ${elapsed} - ${elapsed_prev[$go_back]} )) -lt 15*60 ]]; do
+      let go_back++
+    done
+    [[ ${_done} -eq 0 ]] && {
+      remaining=0
+      #remaining=0
+    } || {
+      [[ ${_done_prev[$go_back]} -eq ${_done} ]] && {
+        remaining=0
+      } || {
+        remaining=$(( 100 * ($elapsed - ${elapsed_prev[$go_back]}) * (100 - ${_done}) / (${_done} - ${_done_prev[$go_back]}) / 100 ))
+      }
+      #remaining=$(( 100 * $elapsed * (100 - ${_done}) / ${_done} / 100 ))
+    }
+    eta=$(( $start + $remaining ))
+    printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%x %T)T" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta
+    [[ "${_done}" != "${_done_prev}" ]] && {
+      Log "$p, $line, $go_back"
+      _done_prev=(${_done} "${_done_prev[@]}" )
+      elapsed_prev=($elapsed "${elapsed_prev[@]}")
     } || {
       LogDebug "$p, $line"
     }
