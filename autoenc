@@ -539,7 +539,7 @@ process "$movie" 2>&1 | tr '\r' '\n' | while read -r line; do
       }
       #remaining=$(( 100 * $elapsed * (100 - ${_done}) / ${_done} / 100 ))
     }
-    eta=$(( $start + $remaining ))
+    eta=$(( $start + $elapsed + $remaining ))
     printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%x %T)T" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta
     [[ "${_done}" != "${_done_prev}" ]] && {
       Log "$p, $line, $go_back"
