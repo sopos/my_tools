@@ -524,8 +524,8 @@ process "$movie" 2>&1 | tr '\r' '\n' | while read -r line; do
         elapsed_prev+=(0)
       done
     }
-    go_back=1
-    while [[ $go_back -lt 100 && $(( ${elapsed} - ${elapsed_prev[$go_back]} )) -lt 60*60 ]]; do
+    go_back=2
+    while [[ $go_back -lt 15 && $(( ${elapsed} - ${elapsed_prev[$go_back]} )) -lt 60*60 ]]; do
       let go_back++
     done
     [[ ${_done} -eq 0 ]] && {
