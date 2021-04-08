@@ -487,7 +487,7 @@ find_movie() {
       continue
     fi
     [[ -e "$in_progress" ]] && {
-      if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 14400 ]]; then
+      if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 43200 ]]; then
         LogDebug "file $file is being currently processed by someone else"
         continue
       else
