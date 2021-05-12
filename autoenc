@@ -571,6 +571,5 @@ main() {
   done < <(process "$movie" | tr '\r' '\n' )
 }
 
-while : ; do
-  main
-done
+main
+exec $0
