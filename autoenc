@@ -384,7 +384,7 @@ enc_hd2() { # max 1280x720p, max 25fps
                            \"$out\""
 }
 
-enc_tv() { # max 1280x720p, max 25fps, fast
+enc_tv() { # max 1280x720p, max 25fps, veryfast
   local file="$1" opts out="$2" scale
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
@@ -400,7 +400,7 @@ enc_tv() { # max 1280x720p, max 25fps, fast
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
-                           -c:v libx264 -crf ${quality} -preset fast -r 25 \
+                           -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
                            -c:a $basic_audio_codec -b:a 160k \
                            -c:s copy \
                            \"$out\""
