@@ -68,8 +68,8 @@ fileext() {
 }
 
 basic_audio_codec=aac
-x265_preset=veryslow
-x264_preset=veryslow
+x265_preset=slow
+x264_preset=slow
 
 enc_eee() {
   local file="$1" opts out="$2"
