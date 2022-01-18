@@ -411,9 +411,9 @@ enc_qhd() { # max 960x540p, max 25fps, stereo
   local file="$1" opts out="$2" scale
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
-  local quality=23
-  [[ $height -le 486 ]] && quality=22
-  [[ $height -le 360 ]] && quality=21
+  local quality=22
+  [[ $height -le 486 ]] && quality=21
+  [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   scale="-vf \"scale=-4:'min(540,ih)'\""
