@@ -578,13 +578,8 @@ set_codec() {
 find_movie() {
   local file fname in_progress
   (
-#    find /mnt/net/\!downloads/ -type f
-#    find /mnt/net/archiv/ -type f -mtime +0
-#    find /mnt/net/CD/ -type f -mtime +0
-#    find /mnt/net/\!probrat/ -type f -mtime +0
-#    find /mnt/net/to_process -type f
-    find -L "$HOME/Videos/to_process/" ! -name '.*'
-  ) | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | sort | \
+    find -L "$HOME/Videos/to_process/tv/" "$HOME/Videos/to_process/" ! -name '.*'
+  ) | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | \
   while read -r file; do
     LogDebug "file $file"
     set_codec "$file"
