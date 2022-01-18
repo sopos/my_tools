@@ -19,7 +19,8 @@ LogDebug(){
 }
 
 ( which HandBrakeCLI && which ffmpeg && which ps && which pidof && which mediainfo && which bc && which nice && which find && which grep ) > /dev/null 2>&1 || {
-  Log "following tools need to be installed: HandBrakeCLI. ffmpeg, git, ps, pidof, mediainfo, bc, nice, find, and grep" >&2
+  Log "following tools need to be installed: HandBrakeCLI. ffmpeg, git, ps, pidof, mediainfo, bc, nice, find, and grep"
+  Log " try \`dnf install \\*/bin/HandBrakeCLI \\*/bin/ffmpeg \\*/bin/git \\*/bin/ps \\*/bin/pidof \\*/bin/mediainfo \\*/bin/bc \\*/bin/nice \\*/bin/find \\*/bin/grep\`"
   exit
 }
 
