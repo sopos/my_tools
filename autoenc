@@ -363,6 +363,34 @@ enc_x265() {
                            \"$out\""
 }
 
+enc_x265_fhd() { # max 1920x1080p
+  local file="$1" opts out="$2" scale
+  local width=$(mediainfo --Inform='Video;%Width%' "$file")
+  local height=$(mediainfo --Inform='Video;%Height%' "$file")
+  local quality=25
+  [[ $height -le 720 ]] && quality=24
+  [[ $height -le 540 ]] && quality=22
+  [[ $height -le 486 ]] && quality=21
+  [[ $height -le 360 ]] && quality=20
+  local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
+  [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  scale="-vf \"scale=-4:'min(1080,ih)'\""
+  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
+  scale+=" -sws_flags bilinear"
+  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+                           -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
+                           $scale \
+                           $opts \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset \
+                           -c:a copy \
+                           -c:s copy \
+                           \"$out\""
+}
+
+enc_fhd() {
+  enc_x265_fhd "$@"
+}
+
 enc_hd2() { # max 1280x720p, max 25fps
   local file="$1" opts out="$2" scale
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
