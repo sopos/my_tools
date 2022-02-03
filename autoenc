@@ -27,8 +27,9 @@ LogDebug(){
 [[ "$1" != "reload" ]] && {
   LogDebug "updating the script"
   git_out="$(git -C $(dirname `readlink -e $0`) pull)" || echo "$git_out"
-  exec $0 reload
+  exec $0 reload "$@"
 }
+shift
 
 Run() {
   LogDebug "running '$1'"
@@ -592,7 +593,7 @@ process() {
 }
 
 set_codec() {
-  codec=x264
+  codec=x265
   [[ "$1" =~ /to_process/([^/]*)/ ]] && {
     LogDebug "parsed potential codec ${BASH_REMATCH[1]} from $1"
     LogDebug "testing processor `declare -F enc_${BASH_REMATCH[1]}`"
@@ -606,7 +607,7 @@ set_codec() {
 find_movie() {
   local file fname in_progress
   (
-    find -L "$HOME/Videos/to_process/tv/" "$HOME/Videos/to_process/" ! -name '.*'
+    find -L "$@" "$HOME/Videos/to_process/" ! -name '.*'
   ) | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | \
   while read -r file; do
     LogDebug "file $file"
@@ -643,7 +644,7 @@ TimeToSeconds() {
 }
 
 main() {
-  movie=$(find_movie)
+  movie=$(find_movie "$@")
   [[ -z "$movie" ]] && exit
   set_codec "$movie"
   Log "process $movie using codec $codec"
@@ -705,5 +706,5 @@ main() {
   done < <(process "$movie" | tr '\r' '\n' )
 }
 
-main
+main "$@"
 exec $0
