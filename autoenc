@@ -707,4 +707,4 @@ main() {
 }
 
 main "$@"
-exec $0
+exec $0 "$@"
