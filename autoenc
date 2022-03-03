@@ -436,6 +436,10 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, stereo
                            \"$out\""
 }
 
+enc_hd2() {
+  enc_tv "$@"
+}
+
 enc_qhd() { # max 960x540p, max 25fps, stereo
   local file="$1" opts out="$2" scale
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
