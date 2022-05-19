@@ -612,9 +612,9 @@ set_codec() {
 
 find_movie() {
   local file fname in_progress
-  (
-    find -L "$@" "$HOME/Videos/to_process/" ! -name '.*'
-  ) | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | \
+  for path in "$@" "$HOME/Videos/to_process/"; do
+    find -L "$file" ! -name '.*' | sort
+  done | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | \
   while read -r file; do
     LogDebug "file $file"
     set_codec "$file"
@@ -650,9 +650,7 @@ TimeToSeconds() {
 }
 
 main() {
-  [[ -e /tmp/autoenc.break ]] && {
-    rm -f /tmp/autoenc.break
-  }
+  rm -f /tmp/autoenc.break
   movie=$(find_movie "$@")
   [[ -z "$movie" ]] && exit
   set_codec "$movie"
@@ -672,10 +670,6 @@ main() {
   Log "found duration $duration2 seconds" ' INFO  '
   duration="$duration2"
   while read -r line; do
-    [[ -e /tmp/autoenc.break ]] && {
-      rm -f /tmp/autoenc.break
-      exit 1
-    }
     if [[ "$line" =~ ([0-9]+)\.[0-9]{2}\ % ]] || [[ "$line" =~ time=([0-9]{2}):([0-9]{2}):([0-9]{2}) ]]; then
       if [[ -z "${BASH_REMATCH[3]}" ]]; then
         _done=${BASH_REMATCH[1]}
@@ -717,6 +711,10 @@ main() {
       Log "$line"
     fi
   done < <(process "$movie" | tr '\r' '\n' )
+  [[ -e /tmp/autoenc.break ]] && {
+    rm -f /tmp/autoenc.break
+    exit 1
+  }
 }
 
 main "$@"
