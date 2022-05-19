@@ -613,7 +613,7 @@ set_codec() {
 find_movie() {
   local file fname in_progress
   for path in "$@" "$HOME/Videos/to_process/"; do
-    find -L "$file" ! -name '.*' | sort
+    find -L "$path" ! -name '.*' | sort
   done | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | \
   while read -r file; do
     LogDebug "file $file"
