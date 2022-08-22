@@ -207,10 +207,6 @@ enc_x264_hd() {
   enc_x264_1280x720 "$@"
 }
 
-enc_hd() {
-  enc_x264_1280x720 "$@"
-}
-
 enc_htpc() {
   local file="$1" opts out="$2"
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
@@ -560,6 +556,10 @@ enc_x265_1280x720() {
 
 enc_x265_hd() {
   enc_x265_1280x720 "$@"
+}
+
+enc_hd() {
+  enc_x265_hd "$@"
 }
 
 process() {
