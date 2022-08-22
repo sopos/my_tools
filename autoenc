@@ -558,6 +558,10 @@ enc_x265_1280x720() {
                           -o "$out"
 }
 
+enc_x265_hd() {
+  enc_x265_1280x720 "$@"
+}
+
 process() {
   local file="$1" opts
   opts='--keep-display-aspect'
