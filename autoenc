@@ -388,7 +388,7 @@ enc_fhd() {
   enc_x265_fhd "$@"
 }
 
-enc_hd2() { # max 1280x720p, max 25fps
+enc_hd2() { # max 1280x720p, max 25fps, stereo
   local file="$1" opts out="$2" scale
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
@@ -405,12 +405,12 @@ enc_hd2() { # max 1280x720p, max 25fps
                            $scale \
                            $opts \
                            -c:v libx264 -crf ${quality} -preset $x264_preset -r 25 \
-                           -c:a $basic_audio_codec -b:a 160k \
+                           -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            -c:s copy \
                            \"$out\""
 }
 
-enc_tv() { # max 1280x720p, max 25fps, veryfast, stereo
+enc_tv() { # max 1280x720p, max 25fps, veryfast, copy audio
   local file="$1" opts out="$2" scale
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
@@ -427,7 +427,7 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, stereo
                            $scale \
                            $opts \
                            -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
-                           -c:a $basic_audio_codec -ac 2 -b:a 160k \
+                           -c:a copy \
                            -c:s copy \
                            \"$out\""
 }
@@ -571,7 +571,7 @@ enc_x265_1280x720() { # max 1280x720p
                            $scale \
                            $opts \
                            -c:v libx265 -crf ${quality} -preset $x265_preset \
-                           -c:a $basic_audio_codec -ac 2 -b:a 160k \
+                           -c:a copy \
                            -c:s copy \
                            \"$out\""
 }
