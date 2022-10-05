@@ -733,6 +733,23 @@ main() {
       } || {
         LogDebug "$p, $line"
       }
+      # stop if processed files is removed
+      [[ -e /tmp/autoenc.break ]] || {
+        [[ -e "$movie" ]] || {
+          Log "file $movie got removed, stopping the processing"
+          _pid=$(pstree -palA $$ | grep -oEm1 'ffmpeg,[0-9]+' | grep -oE '[0-9]+')
+          [[ -z "${_pid}" ]] && {
+            LogDebug "ffmpeg PID not found, trying HandBrakeCLI"
+            _pid=$(pstree -palA $$ | grep -oE 'HandBrakeCLI,[0-9]+' | grep -o '[0-9]+' )
+          }
+          LogDebug "found PID '${_pid}'"
+          [[ -n "${_pid}" ]] && {
+            Log "killing process with PID ${_pid}"
+            kill ${_pid}
+            touch /tmp/autoenc.break
+          }
+        }
+      }
     else
       Log "$line"
     fi
