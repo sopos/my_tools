@@ -735,7 +735,8 @@ main() {
       }
       # stop if processed files is removed
       [[ -e /tmp/autoenc.break ]] || {
-        [[ -e "$movie" ]] || {
+        #[[ -e "$movie" ]] || {
+        ls -1 "$(dirname "$movie")" | grep -qE "^$(basename "$movie")$" || {
           Log "file $movie got removed, stopping the processing"
           _pid=$(pstree -palA $$ | grep -oEm1 'ffmpeg,[0-9]+' | grep -oE '[0-9]+')
           [[ -z "${_pid}" ]] && {
