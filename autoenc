@@ -47,15 +47,15 @@ RUN() {
     fi
   done
   params="${params:1}"
-  Log "EXECUTING >>>>> ${params} <<<<<"
-  eval "$params"
+  Log "EXECUTING >>>>> ionice -c 3 nice -n 15 ${params} <<<<<"
+  eval "ionice -c 3 nice -n 15 $params"
   local res=$?
   LogDebug "FINISHED WITH RESULT $res"
   return $res
 }
 RUN2() {
-  Log "EXECUTING >>>>> ${1} <<<<<"
-  eval "$1"
+  Log "EXECUTING >>>>> ionice -c 3 nice -n 15 ${1} <<<<<"
+  eval "ionice -c 3 nice -n 15 $1"
   local res=$?
   LogDebug "FINISHED WITH RESULT $res"
   return $res
@@ -76,7 +76,7 @@ x264_preset=slow
 enc_eee() {
   local file="$1" opts out="$2"
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e mpeg4 -q 15.0 $opts -m --previews 1 -X 1024 -Y 576 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E $basic_audio_codec -B 160 --audio-fallback ac3 -6 stereo \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -89,7 +89,7 @@ enc_eee() {
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
   local quality=25
   opts='--keep-display-aspect'
-  RUN2 "nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN2 "HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 -X 832 -Y 468 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E $basic_audio_codec -B 128 --mixdown stereo --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -103,7 +103,7 @@ enc_eee2() {
   local quality=23
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? -vf \"scale=-4:'min(468,ih)'\" -sws_flags bilinear \
                            $opts \
                            -c:v libx264 -crf ${quality} -preset $x264_preset \
@@ -118,7 +118,7 @@ enc_x264_864x486() {
   local quality=21
   [[ $height -le 360 ]] && quality=20
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 -X 864 -Y 486 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E $basic_audio_codec -B 192 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -132,7 +132,7 @@ enc_x264_832x468() {
   local quality=21
   [[ $height -le 360 ]] && quality=20
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 -X 832 -Y 468 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E $basic_audio_codec -B 192 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -148,7 +148,7 @@ enc_x264() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 -X 1920 -Y 1080 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 384 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -165,7 +165,7 @@ enc_x264() {
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $opts \
                            -c:v libx264 -crf ${quality} -preset $x264_preset \
@@ -182,7 +182,7 @@ enc_x264_1280x720() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
 #  opts='--keep-display-aspect'
-#  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+#  RUN HandBrakeCLI -f av_mkv \
 #                          -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 -X 1280 -Y 720 \
 #                          -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 384 --audio-fallback ac3 \
 #                          -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -193,7 +193,7 @@ enc_x264_1280x720() {
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -214,7 +214,7 @@ enc_htpc() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset ultrafast --h264-profile main --previews 1 -X 1280 -Y 720 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E $basic_audio_codec -B 192 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -244,7 +244,7 @@ enc_htpc_2() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
   opts="--keep-display-aspect --rate $fps"
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 -X 1280 -Y 720 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E $basic_audio_codec -B 192 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -260,7 +260,7 @@ enc_VHS() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
   opts="--keep-display-aspect --decomb=\"mode=17\" --cfr -r 50 --crop 12:12:24:24 -l $(( ($height-2*12)/2 )) --display-width $(( ($height-2*12)/2*4/3 ))"
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy --audio-fallback $basic_audio_codec  -B 192\
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -276,7 +276,7 @@ enc_x264_VHS() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
   opts="--keep-display-aspect --decomb=\"mode=17\" --cfr -r 50 --crop 12:12:24:24 --display-width $(( ($height-2*12)*4/3 ))"
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x264 -q ${quality}.0 $opts -m --x264-preset $x264_preset --h264-profile main --previews 1 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy --audio-fallback $basic_audio_codec  -B 192\
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -297,7 +297,7 @@ enc_x265_VHS() {
   [[ $height -le 486 ]] && quality=22
   [[ $height -le 360 ]] && quality=21
   opts="--keep-display-aspect --decomb=\"mode=17\" --cfr -r 50 --crop 12:12:24:24 --display-width $(( ($height-2*12)*4/3 ))"
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x265 -q ${quality}.0 $opts -m --x265-preset $x265_preset --previews 1 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy --audio-fallback $basic_audio_codec  -B 192\
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -315,7 +315,7 @@ enc_minidv() {
   [[ $height -le 360 ]] && quality=20
   opts='--keep-display-aspect --decomb="mode=17" --cfr -r 50 --display-width $(( $height*4/3 ))'
 #                          -a 1 -E $basic_audio_codec -B 192 \
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x265 -q ${quality}.0 $opts -m --x265-preset $x265_preset --previews 1\
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 192 --audio-fallback $basic_audio_codec \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -333,7 +333,7 @@ enc_x265() {
   [[ $height -le 486 ]] && quality=22
   [[ $height -le 360 ]] && quality=21
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x265 -q ${quality}.0 $opts -m --x265-preset $x265_preset --previews 1 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 384 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -351,7 +351,7 @@ enc_x265() {
   [[ $height -le 360 ]] && quality=21
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $opts \
                            -c:v libx265 -crf ${quality} -preset $x265_preset \
@@ -374,7 +374,7 @@ enc_x265_fhd() { # max 1920x1080p
   scale="-vf \"scale=-4:'min(1080,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -400,7 +400,7 @@ enc_hd2() { # max 1280x720p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -422,7 +422,7 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, copy audio
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -448,7 +448,7 @@ enc_qhd() { # max 960x540p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(540,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -470,7 +470,7 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -492,7 +492,7 @@ enc_x265_fhd2() { # max 1920x1080p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(1080,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -514,7 +514,7 @@ enc_x265_qhd() { # max 960x540p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(540,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -532,7 +532,7 @@ enc_x265_1920x1080() {
   [[ $height -le 486 ]] && quality=22
   [[ $height -le 360 ]] && quality=21
   opts='--keep-display-aspect'
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x265 -q ${quality}.0 $opts -m --x265-preset $x265_preset --previews 1 -X 1920 -Y 1080 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 384 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -546,7 +546,7 @@ enc_x265_1280x720() {
   local quality=23
   [[ $height -le 486 ]] && quality=22
   [[ $height -le 360 ]] && quality=21
-  RUN nice -n 15 HandBrakeCLI -f av_mkv \
+  RUN HandBrakeCLI -f av_mkv \
                           -e x265 -q ${quality}.0 $opts -m --x265-preset $x265_preset --previews 1 -X 1280 -Y 720 \
                           -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 384 --audio-fallback ac3 \
                           -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
@@ -566,7 +566,7 @@ enc_x265_1280x720() { # max 1280x720p
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "nice -n 15 ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
