@@ -741,7 +741,7 @@ main() {
         while read -r file_line; do
           [[ "$file_line" == "$bname" ]] && res=1
         done < <(ls -1 "$(dirname "$movie")")
-        [[ -z "$res" ]] || {
+        [[ -z "$res" ]] && {
           Log "file $movie got removed, stopping the processing"
           _pid=$(pstree -palA $$ | grep -oEm1 'ffmpeg,[0-9]+' | grep -oE '[0-9]+')
           [[ -z "${_pid}" ]] && {
