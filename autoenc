@@ -103,7 +103,7 @@ enc_eee2() {
   local quality=23
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? -vf \"scale=-4:'min(468,ih)'\" -sws_flags bilinear \
                            $opts \
                            -c:v libx264 -crf ${quality} -preset $x264_preset \
@@ -165,7 +165,7 @@ enc_x264() {
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $opts \
                            -c:v libx264 -crf ${quality} -preset $x264_preset \
@@ -193,7 +193,7 @@ enc_x264_1280x720() {
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -229,7 +229,7 @@ enc_htpc_rpi() {
   [[ $height -le 486 ]] && quality=21
   [[ $height -le 360 ]] && quality=20
   opts='--keep-display-aspect'
-  nice -n 15 ffmpeg -stats -hide_banner -y \
+  nice -n 15 ffmpeg -fflags +igndts -stats -hide_banner -y \
                            -i "$file" -map 0:v -map 0:a? -map 0:s? -vf "scale=-4:'min(720,ih)'" -sws_flags bilinear \
                            -c:v h264_omx -b:v 1500k -maxrate:v 2000k \
                            -c:a $basic_audio_codec -b:a 192k \
@@ -351,7 +351,7 @@ enc_x265() {
   [[ $height -le 360 ]] && quality=21
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $opts \
                            -c:v libx265 -crf ${quality} -preset $x265_preset \
@@ -374,7 +374,7 @@ enc_x265_fhd() { # max 1920x1080p
   scale="-vf \"scale=-4:'min(1080,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -400,7 +400,7 @@ enc_hd2() { # max 1280x720p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -422,7 +422,7 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, copy audio
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -448,7 +448,7 @@ enc_qhd() { # max 960x540p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(540,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -470,7 +470,7 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -492,7 +492,7 @@ enc_x265_fhd2() { # max 1920x1080p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(1080,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -514,7 +514,7 @@ enc_x265_qhd() { # max 960x540p, max 25fps, stereo
   scale="-vf \"scale=-4:'min(540,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
@@ -566,7 +566,7 @@ enc_x265_1280x720() { # max 1280x720p
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
-  RUN2 "ffmpeg -stats -nostdin -hide_banner -y \
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
