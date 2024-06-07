@@ -65,14 +65,14 @@ RUN() {
   done
   params="${params:1}"
   Log "EXECUTING >>>>> ionice -c 3 nice -n 15 ${params} <<<<<"
-  eval "ionice -c 3 nice -n 15 $params"
+  eval "ionice -c 3 nice -n 15 $params" 2>&1
   local res=$?
   LogDebug "FINISHED WITH RESULT $res"
   return $res
 }
 RUN2() {
   Log "EXECUTING >>>>> ionice -c 3 nice -n 15 ${1} <<<<<"
-  eval "ionice -c 3 nice -n 15 $1"
+  eval "ionice -c 3 nice -n 15 $1" 2>&1
   local res=$?
   LogDebug "FINISHED WITH RESULT $res"
   return $res
@@ -610,7 +610,7 @@ process() {
     return 2
   }
   touch "$in_progress"
-  eval "enc_$codec \"$file\" \"$in_progress\"" 2>&1
+  eval "enc_$codec \"$file\" \"$in_progress\""
   local res=$?
   Log "EC=$res"
   [[ $res -ne 0 ]] && {
