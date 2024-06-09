@@ -368,6 +368,9 @@ ffprobe_parse() {
       ffp[${BASH_REMATCH[1]}]="${BASH_REMATCH[2]}"
     }
   done <<< "$tmp"
+  [[ -n "$DEBUG" ]] && {
+    for i in $(echo "${!ffp[@]}" | tr ' ' '\n' | sort); do LogDebug "$i = '${ffp[$i]}'"; done
+  }
 }
 
 enc_x265() {
