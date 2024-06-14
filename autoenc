@@ -733,14 +733,16 @@ main() {
   #duration2=$(HandBrakeCLI --scan -i "$movie" 2>&1 | grep duration | grep -oE -m1 '[0-9]{2}:[0-9]{2}:[0-9]{2}' | grep -o '[0-9]*')
   ffprobe_parse "$movie"
   duration=$(echo "${ffp[duration]}" | grep -oE '[0-9]+' | head -n 1)
+  for tag_language in "" "${ffp[TAG:language]}"; do
   [[ -z "$duration" ]] && {
-    tag_language="${ffp[TAG:language]}"; [[ -n "${tag_language}" ]] && tag_language="-${tag_language}"
+    [[ -n "${tag_language}" ]] && tag_language="-${tag_language}"
     duration=$(echo "${ffp[TAG:DURATION${tag_language}]}" | grep -oE -m1 '[0-9]{2}:[0-9]{2}:[0-9]{2}' | grep -o '[0-9]*')
     [[ -n "$duration" ]] && {
       LogDebug "raw duration is '${ffp[TAG:DURATION{tag_language}]}' '$duration'"
       duration=$(TimeToSeconds $duration)
     }
   }
+  done
   Log "found duration $duration seconds" 'INFO'
   while read -r line; do
     if [[ "$line" =~ ([0-9]+)\.[0-9]{2}\ % ]] || [[ "$line" =~ time=([0-9]{2}):([0-9]{2}):([0-9]{2}) ]]; then
