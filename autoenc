@@ -359,13 +359,17 @@ enc_x265() {
 }
 
 ffprobe_parse() {
-  local tmp line file="$1"
+  local tmp line file="$1" section=''
   unset ffp
   declare -A -g ffp
-  tmp=$(ffprobe -v error -select_streams v:0 -show_entries stream "$file")
+  tmp=$(ffprobe -v error -select_streams v:0 -show_entries stream:format "$file")
   while read -r line; do
+    [[ "$line" =~ ^\[([^\]]*) ]] && {
+      section="${BASH_REMATCH[1]}"
+      [[ "${section:0:1}" == "\\" ]] && section=''
+    }
     [[ "$line" =~ ^(.*)=(.*)$ ]] && {
-      ffp[${BASH_REMATCH[1]}]="${BASH_REMATCH[2]}"
+      ffp[${section}:${BASH_REMATCH[1]}]="${BASH_REMATCH[2]}"
     }
   done <<< "$tmp"
   [[ -n "$DEBUG" ]] && {
@@ -376,8 +380,7 @@ ffprobe_parse() {
 enc_x265() {
   local file="$1" opts out="$2" height pix_fmt
   #local height=$(mediainfo --Inform='Video;%Height%' "$file")
-  ffprobe_parse "$file"
-  height="${ffp[height]}"
+  height="${ffp[STREAM:height]}"
   local quality=26
   [[ $height -le 1080 ]] && quality=25
   [[ $height -le 720 ]] && quality=24
@@ -385,8 +388,7 @@ enc_x265() {
   [[ $height -le 360 ]] && quality=21
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+=" -map -$teletext"
-  #[[ "${ffp[pix_fmt]} =~ yuv420p10 ]] && opts+=" -vf zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
-  [[ "${ffp[color_space]}" = "bt2020nc" ]] && [[ "${ffp[color_transfer]}" = "smpte2084" ]] && [[ "${ffp[color_primaries]}" = "bt2020" ]] && \
+  [[ "${ffp[STREAM:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:color_primaries]}" = "bt2020" ]] && \
     opts+=" -vf zscale=t=linear:npl=40,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=mobius:desat=2:peak=5.0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
@@ -673,12 +675,18 @@ set_codec() {
   LogDebug "using codec $codec"
 }
 
-find_movie() {
-  local file fname in_progress
+find_movies() {
+  local file fname in_progress path
+  LogDebug "searching for movies in $*"
   for path in "$@"; do
     ionice -c 3 find -L "$path" ! -name '.*' | sort
-  done | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$' | \
-  while read -r file; do
+  done | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$'
+}
+
+parse_movie() {
+  local file fname in_progress
+  file="${!1}"
+  eval "${1}=''"
     LogDebug "file $file"
     set_codec "$file"
     fname="$(filename "$file")"
@@ -686,29 +694,28 @@ find_movie() {
     in_progress="${fname}_${codec}_in_progress.mkv"
     [[ -e "${fname}_${codec}_done.mkv" ]] && {
       LogDebug "file $file is already encoded using $codec"
-      continue
+      return
     }
     [[ -f "$file_target" ]] || {
       LogDebug "$file is not a regular file"
-      continue
+      return
     }
     if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 120 ]]; then
       LogDebug "file $file is being currently being written"
-      continue
+      return
     fi
     [[ -e "$in_progress" ]] && {
       if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 3600 ]]; then
         LogDebug "file $file is being currently processed by someone else"
-        continue
+        return
       else
         rm -f "$in_progress"
       fi
     }
     LogDebug "check $file for a video content"
     ffprobe_parse "$file"
-    #mediainfo "$file" | grep -q Video && echo "$file"
-    [[ "${ffp[codec_type]}" == "video" ]] && echo "$file"
-  done | head -n 1
+
+    [[ "${ffp[STREAM:codec_type]}" == "video" ]] && eval "$1=\"$file\""
 }
 
 TimeToSeconds() {
@@ -717,12 +724,16 @@ TimeToSeconds() {
 
 main() {
   rm -f /tmp/autoenc.break
-  movie=$(find_movie "$@")
-  [[ -z "$movie" ]] && exit
+  movies="$(find_movies "$@")"
+  LogDebug "movies $movies"
+ echo "${movies}" | \
+ while IFS=$'\n' read -r movie; do
+  parse_movie movie
+  [[ -z "$movie" ]] && continue
   set_codec "$movie"
   Log "process $movie using codec $codec"
   sleep $(( RANDOM * 20 / 32767 ))
-  duration=10
+  duration=''
   start=$(date +%s)
   _done=( 0 0 )
   elapsed=( 0 0 )
@@ -731,16 +742,23 @@ main() {
   weight=( 1000 750 400 200 100  50 10   )
   weight=(  950 903 815 663 440 194 38 1 )
   #duration2=$(HandBrakeCLI --scan -i "$movie" 2>&1 | grep duration | grep -oE -m1 '[0-9]{2}:[0-9]{2}:[0-9]{2}' | grep -o '[0-9]*')
-  ffprobe_parse "$movie"
-  duration=$(echo "${ffp[duration]}" | grep -oE '[0-9]+' | head -n 1)
-  for tag_language in "" "${ffp[TAG:language]}" "eng"; do
+  #ffprobe_parse "$movie"
+  LogDebug "parsing duration"
+  for duration_tmp in "FORMAT:duration" "STREAM:duration" "STREAM:TAG:DURATION" "STREAM:TAG:DURATION-${ffp[STREAM:TAG:language]}" "STREAM:TAG:DURATION-eng"; do
     [[ -z "$duration" ]] && {
-      [[ -n "${tag_language}" ]] && tag_language="-${tag_language}"
-      duration=$(echo "${ffp[TAG:DURATION${tag_language}]}" | grep -oE -m1 '[0-9]{2}:[0-9]{2}:[0-9]{2}' | grep -o '[0-9]*')
-      [[ -n "$duration" ]] && {
-        LogDebug "raw duration is '${ffp[TAG:DURATION${tag_language}]}' '$duration'"
-        duration=$(TimeToSeconds $duration)
-      }
+      LogDebug "trying $duration_tmp"
+      duration_tmp=$(echo "${ffp[${duration_tmp}]}" | grep -oE '[0-9]+')
+      LogDebug "value $duration_tmp"
+      duration_format=$(echo "${duration_tmp}" | wc -l)
+      if [[ $duration_format -le 2 ]]; then
+        duration=$(echo "${duration_tmp}" | head -n 1)
+      else
+        duration=$(echo "${duration_tmp}" | head -n 3)
+        [[ -n "$duration" ]] && {
+          LogDebug "raw duration is '${ffp[${duration_tmp}]}' '$duration'"
+          duration=$(TimeToSeconds $duration)
+        }
+      fi
     }
   done
   Log "found duration $duration seconds" 'INFO'
@@ -833,7 +851,7 @@ main() {
     rm -f /tmp/autoenc.break
     exit 1
   }
+ done
 }
 
 main "$@"
-exec $0 "$@"
