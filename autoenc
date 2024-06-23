@@ -48,6 +48,19 @@ LogDebug(){
 }
 shift
 
+# process options
+while [[ "${1:0:1}" == "-" ]]; do
+  case $1 in
+    --skip-hdr)
+      skip_hdr=1
+    ;;
+    --skip-4k)
+      skip_4k=1
+    ;;
+  esac
+  shift
+done
+
 Run() {
   LogDebug "running '$1'"
   eval "$1"
@@ -714,6 +727,9 @@ parse_movie() {
     }
     LogDebug "check $file for a video content"
     ffprobe_parse "$file"
+
+    [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:width]} -ge 3000 ]] && return
+    [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:color_primaries]}" = "bt2020" ]] && return
 
     [[ "${ffp[STREAM:codec_type]}" == "video" ]] && eval "$1=\"$file\""
 }
