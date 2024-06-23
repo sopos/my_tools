@@ -23,7 +23,7 @@ Log(){
 }
 
 LogDebug(){
-  [[ -n "$DEBUG" ]] && Log "$1" "${2:-DEBUG}"
+  [[ -n "$DEBUG" ]] && Log "${FUNCNAME[1]}(): $1" "${2:-DEBUG}"
 }
 
 #echo "`ps auxf | grep -C3 -E 'bash[^|]*autoenc'`"
