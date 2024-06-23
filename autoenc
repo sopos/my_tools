@@ -354,23 +354,6 @@ enc_minidv() {
 }
 
 
-enc_x265() {
-  local file="$1" opts out="$2"
-  local height=$(mediainfo --Inform='Video;%Height%' "$file")
-  local quality=26
-  [[ $height -le 1080 ]] && quality=25
-  [[ $height -le 720 ]] && quality=24
-  [[ $height -le 486 ]] && quality=22
-  [[ $height -le 360 ]] && quality=21
-  opts='--keep-display-aspect'
-  RUN HandBrakeCLI -f av_mkv \
-                          -e x265 -q ${quality}.0 $opts -m --x265-preset $x265_preset --previews 1 \
-                          -a 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 -E copy -B 384 --audio-fallback ac3 \
-                          -s 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20 \
-                          -i "$file" \
-                          -o "$out"
-}
-
 ffprobe_parse() {
   local tmp line file="$1" section=''
   unset ffp
