@@ -714,7 +714,9 @@ parse_movie() {
     [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:width]} -ge 3000 ]] && return
     [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:color_primaries]}" = "bt2020" ]] && return
 
-    [[ "${ffp[STREAM:codec_type]}" == "video" ]] && eval "$1=\"$file\""
+    [[ "${ffp[STREAM:codec_type]}" == "video" ]] || return
+
+    eval "$1=\"$file\""
 }
 
 TimeToSeconds() {
@@ -724,11 +726,11 @@ TimeToSeconds() {
 main() {
   rm -f /tmp/autoenc.break
   movies="$(find_movies "$@")"
-  LogDebug "movies $movies"
- echo "${movies}" | \
- while IFS=$'\n' read -r movie; do
-  parse_movie movie
-  [[ -z "$movie" ]] && continue
+  while IFS=$'\n' read -r movie; do
+    parse_movie movie
+    [[ -n "$movie" ]] && break
+  done <<< "${movies}"
+  [[ -z "$movie" ]] && exit
   set_codec "$movie"
   Log "process $movie using codec $codec"
   sleep $(( RANDOM * 20 / 32767 ))
@@ -850,7 +852,7 @@ main() {
     rm -f /tmp/autoenc.break
     exit 1
   }
- done
 }
 
 main "$@"
+exec $0 "$@"
