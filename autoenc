@@ -683,40 +683,41 @@ parse_movie() {
   local file fname in_progress
   file="${!1}"
   eval "${1}=''"
-    LogDebug "file $file"
-    set_codec "$file"
-    fname="$(filename "$file")"
-    file_target="$(readlink -e "$file")"
-    in_progress="${fname}_${codec}_in_progress.mkv"
-    [[ -e "${fname}_${codec}_done.mkv" ]] && {
-      LogDebug "file $file is already encoded using $codec"
+  [[ -z "$file" ]] && return
+  LogDebug "file $file"
+  set_codec "$file"
+  fname="$(filename "$file")"
+  file_target="$(readlink -e "$file")"
+  in_progress="${fname}_${codec}_in_progress.mkv"
+  [[ -e "${fname}_${codec}_done.mkv" ]] && {
+    LogDebug "file $file is already encoded using $codec"
+    return
+  }
+  [[ -f "$file_target" ]] || {
+    LogDebug "$file is not a regular file"
+    return
+  }
+  if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 120 ]]; then
+    LogDebug "file $file is being currently being written"
+    return
+   fi
+  [[ -e "$in_progress" ]] && {
+    if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 3600 ]]; then
+      LogDebug "file $file is being currently processed by someone else"
       return
-    }
-    [[ -f "$file_target" ]] || {
-      LogDebug "$file is not a regular file"
-      return
-    }
-    if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 120 ]]; then
-      LogDebug "file $file is being currently being written"
-      return
+    else
+      rm -f "$in_progress"
     fi
-    [[ -e "$in_progress" ]] && {
-      if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 3600 ]]; then
-        LogDebug "file $file is being currently processed by someone else"
-        return
-      else
-        rm -f "$in_progress"
-      fi
-    }
-    LogDebug "check $file for a video content"
-    ffprobe_parse "$file"
+  }
+  LogDebug "check $file for a video content"
+  ffprobe_parse "$file"
 
-    [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:width]} -ge 3000 ]] && return
-    [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:color_primaries]}" = "bt2020" ]] && return
+  [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:width]} -ge 3000 ]] && return
+  [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:color_primaries]}" = "bt2020" ]] && return
 
-    [[ "${ffp[STREAM:codec_type]}" == "video" ]] || return
+  [[ "${ffp[STREAM:codec_type]}" == "video" ]] || return
 
-    eval "$1=\"$file\""
+  eval "$1=\"$file\""
 }
 
 TimeToSeconds() {
