@@ -27,7 +27,7 @@ LogDebug(){
 }
 
 ffprobe_parse() {
-  local tmp line file="$1" section='' index=''
+  local tmp line file="$1" section='' index='' i j
   unset ffp
   declare -A -g ffp
   tmp=$(ffprobe -v error -show_entries stream:format "$file")
@@ -41,6 +41,15 @@ ffprobe_parse() {
       ffp[${section}:${index}:${BASH_REMATCH[1]}]="${BASH_REMATCH[2]}"
     }
   done <<< "$tmp"
+  for (( i=0; ; i++ )); do
+    [[ -z "${ffp[STREAM:$i:codec_type]}" ]] && break
+    [[ "${ffp[STREAM:$i:codec_type]}" == "video" && "${ffp[STREAM:$i:codec_name]}" != "mjpeg" ]] && {
+      for j in "${!ffp[@]}"; do
+        [[ "$j" =~ ^STREAM:$i:(.*) ]] && ffp[STREAM:v:${BASH_REMATCH[1]}]="${ffp[$j]}"
+      done
+      break
+    }
+  done
   [[ -n "$DEBUG" ]] && {
     for i in $(echo "${!ffp[@]}" | tr ' ' '\n' | sort); do LogDebug "$i = '${ffp[$i]}'"; done
   }
@@ -372,7 +381,7 @@ enc_minidv() {
 enc_x265() {
   local file="$1" opts out="$2" height pix_fmt
   #local height=$(mediainfo --Inform='Video;%Height%' "$file")
-  height="${ffp[STREAM:0:height]}"
+  height="${ffp[STREAM:v:height]}"
   local quality=26
   [[ $height -le 1080 ]] && quality=25
   [[ $height -le 720 ]] && quality=24
@@ -380,7 +389,7 @@ enc_x265() {
   [[ $height -le 360 ]] && quality=21
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+=" -map -$teletext"
-  [[ "${ffp[STREAM:0:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:0:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:0:color_primaries]}" = "bt2020" ]] && \
+  [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && \
     opts+=" -vf zscale=t=linear:npl=40,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=mobius:desat=2:peak=5.0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
@@ -695,10 +704,10 @@ parse_movie() {
   LogDebug "check $file for a video content"
   ffprobe_parse "$file"
 
-  [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:0:width]} -ge 3000 ]] && return
-  [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:0:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:0:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:0:color_primaries]}" = "bt2020" ]] && return
+  [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:v:width]} -ge 3000 ]] && return
+  [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && return
 
-  [[ "${ffp[STREAM:0:codec_type]}" == "video" ]] || return
+  [[ "${ffp[STREAM:v:codec_type]}" == "video" ]] || return
 
   eval "$1=\"$file\""
 }
@@ -729,7 +738,7 @@ main() {
   #duration2=$(HandBrakeCLI --scan -i "$movie" 2>&1 | grep duration | grep -oE -m1 '[0-9]{2}:[0-9]{2}:[0-9]{2}' | grep -o '[0-9]*')
   #ffprobe_parse "$movie"
   LogDebug "parsing duration"
-  for duration_tmp in "FORMAT::duration" "STREAM:0:duration" "STREAM:0:TAG:DURATION" "STREAM:0:TAG:DURATION-${ffp[STREAM:0:TAG:language]}" "STREAM:0:TAG:DURATION-eng"; do
+  for duration_tmp in "FORMAT::duration" "STREAM:v:duration" "STREAM:v:TAG:DURATION" "STREAM:v:TAG:DURATION-${ffp[STREAM:v:TAG:language]}" "STREAM:v:TAG:DURATION-eng"; do
     [[ -z "$duration" ]] && {
       LogDebug "trying $duration_tmp"
       duration_tmp=$(echo "${ffp[${duration_tmp}]}" | grep -oE '[0-9]+')
