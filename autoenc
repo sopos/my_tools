@@ -724,7 +724,6 @@ main() {
     [[ -n "$movie" ]] && break
   done <<< "${movies}"
   [[ -z "$movie" ]] && exit
-  set_codec "$movie"
   Log "process $movie using codec $codec"
   sleep $(( RANDOM * 20 / 32767 ))
   duration=''
