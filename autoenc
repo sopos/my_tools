@@ -9,7 +9,7 @@ _Log(){
 }
 
 Log(){
-  if [[ "$1" =~ Non-monoton|Skipping\ NAL|Last\ message\ repeated ]]; then
+  if ( [[ "$1" =~ Non-monoton|Skipping\ NAL|Last\ message\ repeated ]] ); then
     let dupes++
     [[ $dupes -eq 2 ]] && _Log "suppressing simillar messages..." info
     [[ $dupes -gt 1 ]] && return
