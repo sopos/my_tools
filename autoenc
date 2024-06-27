@@ -23,7 +23,12 @@ Log(){
 }
 
 LogDebug(){
-  [[ -n "$DEBUG" ]] && Log "${FUNCNAME[1]}(): $1" "${2:-DEBUG}"
+  local level=${2:-1}
+  local tag="${3:-DEBUG}"
+  [[ -n "$DEBUG" ]] && [[ $DEBUG -ge $level ]] && {
+    [[ $level -ge 2 ]] && tag+=":$level"
+    Log "${FUNCNAME[1]}(): $1" "$tag"
+  }
 }
 
 ffprobe_parse() {
@@ -50,8 +55,8 @@ ffprobe_parse() {
       break
     }
   done
-  [[ -n "$DEBUG" ]] && {
-    for i in $(echo "${!ffp[@]}" | tr ' ' '\n' | sort); do LogDebug "$i = '${ffp[$i]}'"; done
+  [[ -n "$DEBUG" ]] && [[ $DEBUG -ge 2 ]] && {
+    for i in $(echo "${!ffp[@]}" | tr ' ' '\n' | sort); do LogDebug "$i = '${ffp[$i]}'" 2; done
   }
 }
 
@@ -822,7 +827,7 @@ main() {
 
           Log "$p; $line" PROGRESS
         else
-          LogDebug "$p; $line" PROGRESS
+          LogDebug "$p; $line" 1 PROGRESS
         fi
 
       fi
