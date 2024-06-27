@@ -704,10 +704,18 @@ parse_movie() {
   LogDebug "check $file for a video content"
   ffprobe_parse "$file"
 
-  [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:v:width]} -ge 3000 ]] && return
-  [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && return
-
-  [[ "${ffp[STREAM:v:codec_type]}" == "video" ]] || return
+  [[ -n "$skip_4k" ]] && [[ ${ffp[STREAM:v:width]} -ge 3000 ]] && {
+    LogDebug "skipping 4k video"
+    return
+  }
+  [[ -n "$skip_hdr" ]] && [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && {
+    LogDebug "skipping HDR video"
+    return
+  }
+  [[ "${ffp[STREAM:v:codec_type]}" == "video" ]] || {
+    LogDebug "skipping non vide format file '${ffp[STREAM:v:codec_type]}'"
+    return
+  }
 
   eval "$1=\"$file\""
 }
