@@ -70,12 +70,19 @@ ffprobe_parse() {
   exit
 }
 
-[[ "$1" != "reload" ]] && {
-  LogDebug "updating the script"
-  git_out="$(git -C $(dirname `readlink -e $0`) pull)" || echo "$git_out"
-  exec $0 reload "$@"
+check4update() {
+  LogDebug "checing for the update"
+  git_out="$(git -C $(dirname `readlink -e $0`) pull)" || {
+    echo "$git_out"
+    exit 1
+  }
+  [[ "$git_out" == "Already up to date." ]] || {
+    echo "$git_out"
+    Log "reexecuting"
+    exec $0 "$@"
+  }
 }
-shift
+check4update
 
 # process options
 while [[ "${1:0:1}" == "-" ]]; do
@@ -727,11 +734,10 @@ TimeToSeconds() {
 main() {
   rm -f /tmp/autoenc.break
   movies="$(find_movies "$@")"
-  while IFS=$'\n' read -r movie; do
-    parse_movie movie
-    [[ -n "$movie" ]] && break
-  done <<< "${movies}"
-  [[ -z "$movie" ]] && exit
+ while IFS=$'\n' read -r movie; do
+  parse_movie movie
+  [[ -z "$movie" ]] && continue
+  check4update
   Log "process $movie using codec $codec"
   sleep $(( RANDOM * 20 / 32767 ))
   duration=''
@@ -852,7 +858,7 @@ main() {
     rm -f /tmp/autoenc.break
     exit 1
   }
+ done <<< "${movies}"
 }
 
 main "$@"
-exec $0 "$@"
