@@ -398,6 +398,11 @@ enc_minidv() {
 }
 
 
+hdr2sdr_opts(){
+  [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && \
+    opts+=" -vf zscale=t=linear:npl=20,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=2:peak=20,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+}
+
 enc_x265() {
   local file="$1" opts out="$2" height pix_fmt
   #local height=$(mediainfo --Inform='Video;%Height%' "$file")
@@ -409,8 +414,7 @@ enc_x265() {
   [[ $height -le 360 ]] && quality=21
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+=" -map -$teletext"
-  [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && \
-    opts+=" -vf zscale=t=linear:npl=40,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=mobius:desat=2:peak=5.0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+  hdr2sdr_opts
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts \
