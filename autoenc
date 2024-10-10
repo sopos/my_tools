@@ -648,10 +648,10 @@ process() {
   local res=$?
   Log "EC=$res"
   [[ $res -ne 0 ]] && {
-    if [[ $res -lt 10 || $res -eq 139 || $res -eq 187 ]]; then
-      mv -f "$file" "$(filename "$file")_broken.$(fileext "$file")"
-    else
+    if [[ $res -eq 130 || $res -eq 143 ]]; then
       touch /tmp/autoenc.break
+    else
+      mv -f "$file" "$(filename "$file")_broken.$(fileext "$file")"
     fi
     rm -f "$in_progress"
     return 1
