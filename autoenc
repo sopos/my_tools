@@ -737,7 +737,7 @@ parse_movie() {
     return
   }
   [[ "${ffp[STREAM:v:codec_type]}" == "video" ]] || {
-    LogDebug "skipping non vide format file '${ffp[STREAM:v:codec_type]}'"
+    LogDebug "skipping non video format file '${ffp[STREAM:v:codec_type]}'"
     return
   }
 
