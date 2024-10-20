@@ -648,7 +648,7 @@ process() {
   local res=$?
   Log "EC=$res"
   [[ $res -ne 0 ]] && {
-    if [[ $res -eq 130 || $res -eq 143 || $res -eq 137 || $res -eq 123 ]]; then
+    if [[ $res -eq 130 || $res -eq 143 || $res -eq 137 || $res -eq 123 || $res -eq 149 ]]; then
       touch /tmp/autoenc.break
     else
       mv -f "$file" "$(filename "$file")_broken.$(fileext "$file")"
