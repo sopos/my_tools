@@ -648,11 +648,18 @@ process() {
   local res=$?
   Log "EC=$res"
   [[ $res -ne 0 ]] && {
-    if [[ $res -eq 130 || $res -eq 143 || $res -eq 137 || $res -eq 123 || $res -eq 149 ]]; then
-      touch /tmp/autoenc.break
-    else
-      mv -f "$file" "$(filename "$file")_broken.$(fileext "$file")"
-    fi
+    case $res in
+      123|149)
+        touch /tmp/autoenc.break
+      ;;
+      130|143|137)
+        touch /tmp/autoenc.skip
+      ;;
+      *)
+        mv -f "$file" "$(filename "$file")_broken.$(fileext "$file")"
+        touch /tmp/autoenc.skip
+      ;;
+    esac
     rm -f "$in_progress"
     return 1
   }
@@ -845,7 +852,7 @@ main() {
       fi
 
       # stop if processed files is removed
-      [[ -e /tmp/autoenc.break ]] || {
+      [[ -e /tmp/autoenc.break || -e /tmp/autoenc.skip ]] || {
         #[[ -e "$movie" ]] || {
         bname="$(basename "$movie")"
         res=''
@@ -863,7 +870,7 @@ main() {
           [[ -n "${_pid}" ]] && {
             Log "killing process with PID ${_pid}"
             kill ${_pid}
-            touch /tmp/autoenc.break
+            touch /tmp/autoenc.skip
           }
         }
       }
@@ -871,8 +878,8 @@ main() {
       Log "$line" out
     fi
   done < <(process "$movie" | tr '\r' '\n' )
-  [[ -e /tmp/autoenc.break ]] && {
-    rm -f /tmp/autoenc.break
+  [[ -e /tmp/autoenc.break || -e /tmp/autoenc.skip ]] && {
+    rm -f /tmp/autoenc.break /tmp/autoenc.skip
     exit 1
   }
  done <<< "${movies}"
