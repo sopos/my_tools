@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 dupes=0
 _Log(){
   local prio="${2:-LOG}"
