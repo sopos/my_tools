@@ -879,6 +879,9 @@ main() {
           [[ -n "${_pid}" ]] && {
             Log "killing process with PID ${_pid}"
             kill ${_pid}
+            kill ${_pid}
+            kill ${_pid}
+            kill ${_pid}
             touch /tmp/autoenc.skip
           }
         }
