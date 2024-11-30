@@ -84,14 +84,14 @@ ffprobe_parse() {
 }
 
 check4update() {
-  LogDebug "checing for the update"
+  LogDebug "checking for the update"
   git_out="$(git -C $(dirname `readlink -e $0`) pull)" || {
     echo "$git_out" | Log -
     exit 1
   }
   [[ "$git_out" == "Already up to date." ]] || {
     echo "$git_out" | Log -
-    Log "reexecuting"
+    Log "reexecuting $0 $*"
     exec $0 "$@"
   }
 }
