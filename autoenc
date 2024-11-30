@@ -878,9 +878,9 @@ main() {
           LogDebug "found PID '${_pid}'"
           [[ -n "${_pid}" ]] && {
             Log "killing process with PID ${_pid}"
-            kill ${_pid}
-            kill ${_pid}
-            kill ${_pid}
+            kill ${_pid}; sleep 0.1
+            kill ${_pid}; sleep 0.1
+            kill ${_pid}; sleep 0.1
             kill ${_pid}
             touch /tmp/autoenc.skip
           }
