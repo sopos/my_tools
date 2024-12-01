@@ -841,10 +841,12 @@ main() {
           down=0
           for (( i=1; i<${#_done[@]}-1; i++ )); do
             [[ $i -gt ${#weight[@]} ]] && break
-            up=$(( up + weight[i-1] * ( elapsed[i] - elapsed[i+1] ) / ( _done[i] - _done[i+1] ) ))
+            if ${_done[i]} != ${_done[i+1]}; then
+              up=$(( up + weight[i-1] * ( elapsed[i] - elapsed[i+1] ) / ( _done[i] - _done[i+1] ) ))
+            fi
             down=$(( down + weight[i-1] ))
           done
-          [[ ${_done} -eq 0 ]] && {
+          [[ ${_done} -eq 0 || ${_done} -eq 100 ]] && {
             remaining=0
           } || {
             remaining=$(( up / down * ( 100 - _done ) ))
