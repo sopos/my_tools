@@ -95,7 +95,7 @@ check4update() {
     exec $0 "$@"
   }
 }
-check4update
+check4update "$@"
 
 # process options
 while [[ "${1:0:1}" == "-" ]]; do
@@ -761,7 +761,7 @@ main() {
  while IFS=$'\n' read -r movie; do
   parse_movie movie
   [[ -z "$movie" ]] && continue
-  check4update
+  check4update "$@"
   Log "process $movie using codec $codec"
   sleep $(( RANDOM * 20 / 32767 ))
   duration=''
