@@ -892,8 +892,9 @@ main() {
       Log "$line" out
     fi
   done < <(process "$movie" | tr '\r' '\n' )
-  [[ -e /tmp/autoenc.break || -e /tmp/autoenc.skip ]] && {
-    rm -f /tmp/autoenc.break /tmp/autoenc.skip
+  [[ -e /tmp/autoenc.skip ]] && rm -f /tmp/autoenc.skip
+  [[ -e /tmp/autoenc.break ]] && {
+    rm -f /tmp/autoenc.break
     exit 1
   }
  done <<< "${movies}"
