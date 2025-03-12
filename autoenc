@@ -400,7 +400,7 @@ enc_minidv() {
 
 hdr2sdr_opts(){
   [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && \
-    opts+=" -vf zscale=t=linear:npl=60,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=5:peak=10,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+    opts+=" -vf zscale=t=linear:npl=80,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=5:peak=10,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
 }
 
 enc_x265() {
