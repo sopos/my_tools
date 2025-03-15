@@ -397,10 +397,14 @@ enc_minidv() {
                           -o "$out"
 }
 
+vf_add() {
+  [[ -n "$vf" ]] && vf+=","
+  vf+="$1"
+}
 
 hdr2sdr_opts(){
   [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && \
-    opts+=" -vf zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=6:peak=3,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+    vf_add "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=6:peak=3,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
 }
 
 enc_x265() {
@@ -417,7 +421,7 @@ enc_x265() {
   hdr2sdr_opts
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset \
                            \"$out\""
 }
@@ -434,13 +438,11 @@ enc_x265_fhd() { # max 1920x1080p
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   hdr2sdr_opts
-  scale="-vf \"scale=-4:'min(1080,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1920,iw)':-4\"" || vf_add "\"scale=-4:'min(1080,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset \
                            \"$out\""
 }
@@ -458,13 +460,11 @@ enc_hd2() { # max 1280x720p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  scale="-vf \"scale=-4:'min(720,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1280,iw)':-4\"" || vf_add "\"scale=-4:'min(720,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx264 -crf ${quality} -preset $x264_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
@@ -479,13 +479,11 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, copy audio
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  scale="-vf \"scale=-4:'min(720,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1280,iw)':-4\"" || vf_add "\"scale=-4:'min(720,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
                            \"$out\""
 }
@@ -503,13 +501,11 @@ enc_qhd() { # max 960x540p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
-  scale="-vf \"scale=-4:'min(540,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(960,iw)':-4\"" || vf_add "\"scale=-4:'min(540,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
@@ -525,13 +521,11 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   hdr2sdr_opts
-  scale="-vf \"scale=-4:'min(720,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1280,iw)':-4\"" || vf_add "\"scale=-4:'min(720,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
@@ -547,13 +541,11 @@ enc_x265_fhd2() { # max 1920x1080p, max 25fps, stereo
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   hdr2sdr_opts
-  scale="-vf \"scale=-4:'min(1080,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1920,iw)':-4\"" || vf_add "\"scale=-4:'min(1080,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
@@ -569,13 +561,11 @@ enc_x265_qhd() { # max 960x540p, max 25fps, stereo
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   hdr2sdr_opts
-  scale="-vf \"scale=-4:'min(540,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(960,iw)':-4\"" || vf_add "\"scale=-4:'min(540,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
@@ -621,13 +611,11 @@ enc_x265_1280x720() { # max 1280x720p
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   hdr2sdr_opts
-  scale="-vf \"scale=-4:'min(720,ih)'\""
-  (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
-  scale+=" -sws_flags bilinear"
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1280,iw)':-4\"" || vf_add "\"scale=-4:'min(720,ih)'\""
+  opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $scale \
-                           $opts \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset \
                            \"$out\""
 }
