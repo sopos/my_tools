@@ -433,6 +433,7 @@ enc_x265_fhd() { # max 1920x1080p
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   scale="-vf \"scale=-4:'min(1080,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
   scale+=" -sws_flags bilinear"
@@ -523,6 +524,7 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
@@ -544,6 +546,7 @@ enc_x265_fhd2() { # max 1920x1080p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   scale="-vf \"scale=-4:'min(1080,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1920,iw)':-4\""
   scale+=" -sws_flags bilinear"
@@ -565,6 +568,7 @@ enc_x265_qhd() { # max 960x540p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   scale="-vf \"scale=-4:'min(540,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(960,iw)':-4\""
   scale+=" -sws_flags bilinear"
@@ -616,6 +620,7 @@ enc_x265_1280x720() { # max 1280x720p
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   scale="-vf \"scale=-4:'min(720,ih)'\""
   (( width * 100 / height > 177 )) && scale="-vf \"scale='min(1280,iw)':-4\""
   scale+=" -sws_flags bilinear"
