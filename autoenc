@@ -460,6 +460,7 @@ enc_hd2() { # max 1280x720p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   (( width * 100 / height > 177 )) && vf_add "\"scale='min(1280,iw)':-4\"" || vf_add "\"scale=-4:'min(720,ih)'\""
   opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
@@ -479,6 +480,7 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, copy audio
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   (( width * 100 / height > 177 )) && vf_add "\"scale='min(1280,iw)':-4\"" || vf_add "\"scale=-4:'min(720,ih)'\""
   opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
@@ -501,6 +503,7 @@ enc_qhd() { # max 960x540p, max 25fps, stereo
   [[ $height -le 360 ]] && quality=20
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
   (( width * 100 / height > 177 )) && vf_add "\"scale='min(960,iw)':-4\"" || vf_add "\"scale=-4:'min(540,ih)'\""
   opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
