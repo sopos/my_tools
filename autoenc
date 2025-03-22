@@ -847,6 +847,7 @@ main() {
           } || {
             remaining=$(( up / down * ( 100 - _done ) ))
           }
+          [[ $down -eq 0 ]] && down=1
           eta=$(( $start + $elapsed + $remaining ))
           #printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %3d %3d spp" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $(( up / down )) $(( ( elapsed[1] - elapsed[1+1] ) / ( _done[1] - _done[1+1] ) ))
           printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %4d" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $(( up / down ))
