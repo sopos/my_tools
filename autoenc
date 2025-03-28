@@ -698,7 +698,7 @@ find_movies() {
   local file fname in_progress path
   LogDebug "searching for movies in $*"
   for path in "$@"; do
-    ionice -c 3 find -L "$path" ! -name '.*' | sort
+    ionice -c 3 find -L "$path" ! -name '.*' 2> /dev/null | sort
   done | grep -iE '\.(avi|mkv|mpg|mpeg|mp4|iso|ts|m4v|flv|webm)$' | grep -v -e '_in_progress\.' -e '_broken\.' -e '_done\.' -e '_to_be_deleted\.' -e '\.part$'
 }
 
