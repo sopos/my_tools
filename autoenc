@@ -720,7 +720,7 @@ parse_movie() {
     LogDebug "$file is not a regular file"
     return
   }
-  if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 600 ]]; then
+  if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 120 ]]; then
     LogDebug "file $file is currently being written"
     return
    fi
