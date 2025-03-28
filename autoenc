@@ -720,13 +720,13 @@ parse_movie() {
     LogDebug "$file is not a regular file"
     return
   }
-  if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 120 ]]; then
-    LogDebug "file $file is being currently being written"
+  if [[ $(( $(date +%s) - $(stat -c %Z "$file_target") )) -le 600 ]]; then
+    LogDebug "file $file is currently being written"
     return
    fi
   [[ -e "$in_progress" ]] && {
     if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 3600 ]]; then
-      LogDebug "file $file is being currently processed by someone else"
+      LogDebug "file $file is currently being processed by someone else"
       return
     else
       rm -f "$in_progress"
