@@ -403,8 +403,12 @@ vf_add() {
 }
 
 hdr2sdr_opts(){
+  local npl=100 desat=10 peak=3
+  [[ "$file" =~ npl=([0-9]*) ]] && npl=${BASH_REMATCH[1]}
+  [[ "$file" =~ desat=([0-9]*) ]] && desat=${BASH_REMATCH[1]}
+  [[ "$file" =~ peak=([0-9]*) ]] && peak=${BASH_REMATCH[1]}
   [[ "${ffp[STREAM:v:color_space]}" = "bt2020nc" ]] && [[ "${ffp[STREAM:v:color_transfer]}" = "smpte2084" ]] && [[ "${ffp[STREAM:v:color_primaries]}" = "bt2020" ]] && \
-    vf_add "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=6:peak=3,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+    vf_add "zscale=t=linear${npl:+:npl=$npl},format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable${desat:+:desat=$desat}${peak:+:peak=$peak},zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
 }
 
 enc_x265() {
