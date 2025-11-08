@@ -185,7 +185,7 @@ enc_eee2() {
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy -vf \"scale=-4:'min(468,ih)'\" -sws_flags bilinear \
                            $opts \
-                           -c:v:0 libx264 -crf ${quality} -preset $x264_preset \
+                           -c:v libx264 -crf ${quality} -preset $x264_preset \
                            \"$out\""
 }
 
@@ -245,7 +245,7 @@ enc_x264() {
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts \
-                           -c:v:0 libx264 -crf ${quality} -preset $x264_preset \
+                           -c:v libx264 -crf ${quality} -preset $x264_preset \
                            \"$out\""
 }
 
@@ -272,7 +272,7 @@ enc_x264_1280x720() {
                            -i \"$file\" -map 0:v -map 0:a? -map 0:s? \
                            $scale \
                            $opts \
-                           -c:v:0 libx264 -crf ${quality} -preset $x264_preset \
+                           -c:v libx264 -crf ${quality} -preset $x264_preset \
                            -c:a $basic_audio_codec -b:a 160k \
                            \"$out\""
 }
@@ -305,7 +305,7 @@ enc_htpc_rpi() {
   opts='--keep-display-aspect'
   nice -n 15 ffmpeg -fflags +igndts -stats -hide_banner -y \
                            -i "$file" -map 0 -c copy -vf "scale=-4:'min(720,ih)'" -sws_flags bilinear \
-                           -c:v:0 h264_omx -b:v 1500k -maxrate:v 2000k \
+                           -c:v h264_omx -b:v 1500k -maxrate:v 2000k \
                            -c:a $basic_audio_codec -b:a 192k \
                            "$out"
 }
@@ -426,7 +426,7 @@ enc_x265() {
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx265 -crf ${quality} -preset $x265_preset \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset \
                            \"$out\""
 }
 
@@ -447,7 +447,7 @@ enc_x265_fhd() { # max 1920x1080p
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx265 -crf ${quality} -preset $x265_preset \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset \
                            \"$out\""
 }
 
@@ -470,7 +470,7 @@ enc_hd2() { # max 1280x720p, max 25fps, stereo
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx264 -crf ${quality} -preset $x264_preset -r 25 \
+                           -c:v libx264 -crf ${quality} -preset $x264_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
@@ -490,7 +490,7 @@ enc_tv() { # max 1280x720p, max 25fps, veryfast, copy audio
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx264 -crf ${quality} -preset veryfast -r 25 \
+                           -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
                            \"$out\""
 }
 
@@ -513,7 +513,7 @@ enc_qhd() { # max 960x540p, max 25fps, stereo
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx264 -crf ${quality} -preset veryfast -r 25 \
+                           -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
@@ -532,7 +532,7 @@ enc_sd() { # max 852x480p, max 25fps, stereo
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx264 -crf ${quality} -preset veryfast -r 25 \
+                           -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
@@ -552,7 +552,7 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx265 -crf ${quality} -preset $x265_preset -r 25 \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
@@ -572,7 +572,7 @@ enc_x265_fhd2() { # max 1920x1080p, max 25fps, stereo
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx265 -crf ${quality} -preset $x265_preset -r 25 \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
@@ -592,7 +592,7 @@ enc_x265_qhd() { # max 960x540p, max 25fps, stereo
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx265 -crf ${quality} -preset $x265_preset -r 25 \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
@@ -642,7 +642,7 @@ enc_x265_1280x720() { # max 1280x720p
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
-                           -c:v:0 libx265 -crf ${quality} -preset $x265_preset \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset \
                            \"$out\""
 }
 
