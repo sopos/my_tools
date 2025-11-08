@@ -551,8 +551,8 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
   opts+=" -sws_flags bilinear"
   RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
                            -i \"$file\" -map 0 -c copy \
-                           $opts ${vf:+"-vf $vf"} \
                            -c:v:0 libx265 -crf ${quality} -preset $x265_preset -r 25 \
+                           $opts ${vf:+"-vf $vf"} \
                            -c:a $basic_audio_codec -ac 2 -b:a 160k \
                            \"$out\""
 }
