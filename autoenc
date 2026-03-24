@@ -452,6 +452,27 @@ enc_x265_fhd() { # max 1920x1080p
                            \"$out\""
 }
 
+enc_x265_fhd25() { # max 1920x1080p, max 25fps
+  local file="$1" opts out="$2" scale
+  local width=$(mediainfo --Inform='Video;%Width%' "$file")
+  local height=$(mediainfo --Inform='Video;%Height%' "$file")
+  local quality=25
+  [[ $height -le 720 ]] && quality=24
+  [[ $height -le 540 ]] && quality=22
+  [[ $height -le 486 ]] && quality=21
+  [[ $height -le 360 ]] && quality=20
+  local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
+  [[ -n "$teletext" ]] && opts+="-map -$teletext"
+  hdr2sdr_opts
+  (( width * 100 / height > 177 )) && vf_add "\"scale='min(1920,iw)':-4\"" || vf_add "\"scale=-4:'min(1080,ih)'\""
+  opts+=" -sws_flags bilinear"
+  RUN2 "ffmpeg -fflags +igndts -stats -nostdin -hide_banner -y \
+                           -i \"$file\" -map 0 -c copy \
+                           $opts ${vf:+"-vf $vf"} \
+                           -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
+                           \"$out\""
+}
+
 enc_fhd() {
   enc_x265_fhd "$@"
 }
