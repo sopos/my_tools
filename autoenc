@@ -679,13 +679,12 @@ enc_hd() {
 process() {
   local file="$1" opts
   opts='--keep-display-aspect'
-  local in_progress="$(filename "$file")_${codec}_in_progress.mkv"
-  [[ -e "$in_progress" ]] && {
+  [[ -e "$file_in_progress" ]] && {
     LogDebug "file $file is being currently processed by someone else"
     return 2
   }
-  touch "$in_progress"
-  eval "enc_$codec \"$file\" \"$in_progress\""
+  touch "$file_in_progress"
+  eval "enc_$codec \"$file\" \"$file_in_progress\""
   local res=$?
   Log "EC=$res"
   [[ $res -ne 0 ]] && {
@@ -701,14 +700,14 @@ process() {
         touch /tmp/autoenc.skip
       ;;
     esac
-    rm -f "$in_progress"
+    rm -f "$file_in_progress"
     return 1
   }
   #local old="$(filename "$file")_done.$(fileext "$file")"
   local old="$file"
   local new="$file_new"
   local to_be_deleted
-  mv -f "$in_progress" "$new"
+  mv -f "$file_in_progress" "$new"
   #mv -f "$file" "$old"
   local size_old size_new
   size_old=$(stat -c %s "$old")
@@ -733,6 +732,7 @@ set_codec() {
     }
   }
   file_new="$(filename "$file")_${codec}_done.mkv"
+  file_in_progress="$(filename "$file")_${codec}_in_progress.mkv"
   [[ "$1" =~ _(`declare -F | grep enc_ | sed -r 's/^.*-f enc_//' | tr '\n' '|' | sed -r 's/\|$//'`)\.[^.]+$ ]] && {
     LogDebug "overriding codec with ${BASH_REMATCH[1]} from $1"
     codec=${BASH_REMATCH[1]}
