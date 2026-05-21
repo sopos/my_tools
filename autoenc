@@ -731,18 +731,19 @@ set_codec() {
       codec=${BASH_REMATCH[1]}
     }
   }
-  file_new="$(filename "$file")_${codec}_done.mkv"
+  file_new="${fname}_${codec}_done.mkv"
   file_in_progress="$(filename "$file")_${codec}_in_progress.mkv"
   [[ "$1" =~ _(`declare -F | grep enc_ | sed -r 's/^.*-f enc_//' | tr '\n' '|' | sed -r 's/\|$//'`)\.[^.]+$ ]] && {
     LogDebug "overriding codec with ${BASH_REMATCH[1]} from $1"
     codec=${BASH_REMATCH[1]}
-    file_new="$(filename "$file")_done.mkv"
+    file_new="${fname}_done.mkv"
+    file_in_progress="${fname}_in_progress.mkv"
   }
   LogDebug "using codec $codec"
 }
 
 find_movies() {
-  local file fname in_progress path
+  local path
   LogDebug "searching for movies in $*"
   for path in "$@"; do
     ionice -c 3 find -L "$path" ! -name '.*' 2> /dev/null | sort
@@ -750,15 +751,14 @@ find_movies() {
 }
 
 parse_movie() {
-  local file fname in_progress
+  local file fname
   file="${!1}"
   eval "${1}=''"
   [[ -z "$file" ]] && return
   LogDebug "file $file"
-  set_codec "$file"
   fname="$(filename "$file")"
+  set_codec "$file"
   file_target="$(readlink -e "$file")"
-  in_progress="${fname}_${codec}_in_progress.mkv"
   [[ -e "$file_new" ]] && {
     LogDebug "file $file is already encoded using $codec"
     return
@@ -771,12 +771,12 @@ parse_movie() {
     LogDebug "file $file is currently being written"
     return
    fi
-  [[ -e "$in_progress" ]] && {
-    if [[ $(( $(date +%s) - $(stat -c %Z "$in_progress") )) -le 3600 ]]; then
+  [[ -e "$file_in_progress" ]] && {
+    if [[ $(( $(date +%s) - $(stat -c %Z "$file_in_progress") )) -le 3600 ]]; then
       LogDebug "file $file is currently being processed by someone else"
       return
     else
-      rm -f "$in_progress"
+      rm -f "$file_in_progress"
     fi
   }
   LogDebug "check $file for a video content"
