@@ -884,13 +884,13 @@ main() {
           last_window=$elapsed
           last_logged_percent=$_done
         }
-        # record progress at fixed time windows (every 5 seconds) for ETA computation
-        window_size=5
+        # record progress at fixed time windows (every 15 seconds) for ETA computation
+        window_size=15
         if [[ -z "${last_window}" ]] || [[ $(( elapsed - last_window )) -ge $window_size ]]; then
           _done=( ${_done} "${_done[@]}" )
           elapsed=( $elapsed "${elapsed[@]}" )
           last_window=$elapsed
-          # keep only last 12 windows (~1 minute)
+          # keep only last 12 windows (~3 minutes)
           if [[ ${#_done[@]} -gt 13 ]]; then
             _done=( "${_done[@]:0:13}" )
             elapsed=( "${elapsed[@]:0:13}" )
