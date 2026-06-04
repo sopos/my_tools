@@ -816,6 +816,7 @@ main() {
   _done=( 0 0 )
   elapsed=( 0 0 )
   last_window=0
+  last_logged_percent=0
   weight=(  950 903 815 663 440 194 38 1 )
   weight=(  900 810 656 430 185  34  1   )
   weight=( 1000 750 400 200 100  50 10   )
@@ -881,8 +882,9 @@ main() {
           _done=( $_done )
           elapsed=( $elapsed )
           last_window=$elapsed
+          last_logged_percent=$_done
         }
-        # record progress at fixed time windows (every 5 seconds)
+        # record progress at fixed time windows (every 5 seconds) for ETA computation
         window_size=5
         if [[ -z "${last_window}" ]] || [[ $(( elapsed - last_window )) -ge $window_size ]]; then
           _done=( ${_done} "${_done[@]}" )
@@ -894,8 +896,9 @@ main() {
             elapsed=( "${elapsed[@]:0:13}" )
           fi
         fi
-        if [[ "${_done}" -gt "${_done[1]}" ]] || [[ ${#_done[@]} -gt 2 ]]; then
-          remaining=0
+        # compute ETA if we have enough data
+        remaining=0
+        if [[ ${#_done[@]} -gt 2 ]]; then
           up=0
           down=0
           for (( i=1; i<${#_done[@]}-1; i++ )); do
@@ -913,10 +916,14 @@ main() {
             [[ $rate -eq 0 ]] && rate=1
             remaining=$(( ( 100 - _done ) * 1000 / rate ))
           }
-          eta=$(( $start + $elapsed + $remaining ))
-          printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %4d" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $(( ( _done[1] - _done[2] ) * 1000 / ( elapsed[1] - elapsed[2] ) ))
+        fi
+        eta=$(( $start + $elapsed + $remaining ))
+        printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %4d" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $(( ( _done[1] - _done[2] ) * 1000 / ( elapsed[1] - elapsed[2] ) ))
 
+        # log only on full percent change
+        if [[ "${_done}" -gt "${last_logged_percent:-0}" ]]; then
           Log "$p; $line" PROGRESS
+          last_logged_percent=$_done
         else
           LogDebug "$p; $line" 1 PROGRESS
         fi
