@@ -815,6 +815,7 @@ main() {
   start=$(date +%s)
   _done=( 0 0 )
   elapsed=( 0 0 )
+  last_window=0
   weight=(  950 903 815 663 440 194 38 1 )
   weight=(  900 810 656 430 185  34  1   )
   weight=( 1000 750 400 200 100  50 10   )
@@ -877,12 +878,23 @@ main() {
         elapsed=$(( $(date +%s) - start ))
         # reset counter if the precentage decreases
         [[ ${_done} -lt ${_done[1]} ]] && {
-          _done=( $_done 0 )
-          elapsed=( $elapsed 0 )
+          _done=( $_done )
+          elapsed=( $elapsed )
+          last_window=$elapsed
         }
-        if [[ "${_done}" -gt "${_done[1]}" ]]; then
+        # record progress at fixed time windows (every 5 seconds)
+        window_size=5
+        if [[ -z "${last_window}" ]] || [[ $(( elapsed - last_window )) -ge $window_size ]]; then
           _done=( ${_done} "${_done[@]}" )
           elapsed=( $elapsed "${elapsed[@]}" )
+          last_window=$elapsed
+          # keep only last 12 windows (~1 minute)
+          if [[ ${#_done[@]} -gt 13 ]]; then
+            _done=( "${_done[@]:0:13}" )
+            elapsed=( "${elapsed[@]:0:13}" )
+          fi
+        fi
+        if [[ "${_done}" -gt "${_done[1]}" ]] || [[ ${#_done[@]} -gt 2 ]]; then
           remaining=0
           up=0
           down=0
@@ -902,7 +914,6 @@ main() {
             remaining=$(( ( 100 - _done ) * 1000 / rate ))
           }
           eta=$(( $start + $elapsed + $remaining ))
-          #printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %3d %3d spp" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $(( up / down )) $(( ( elapsed[1] - elapsed[1+1] ) / ( _done[1] - _done[1+1] ) ))
           printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %4d" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $(( ( _done[1] - _done[2] ) * 1000 / ( elapsed[1] - elapsed[2] ) ))
 
           Log "$p; $line" PROGRESS
