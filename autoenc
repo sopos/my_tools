@@ -918,7 +918,9 @@ main() {
           }
         fi
         eta=$(( $start + $elapsed + $remaining ))
-        printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta
+        ppm=0
+        [[ ${#_done[@]} -gt 2 ]] && ppm=$(( rate * 60 / 1000 ))
+        printf -v p "%3d%%, elapsed %2dd,%02d:%02d:%02d, rem %2dd,%02d:%02d:%02d, ETA %(%F %T)T, %3d ppm" ${_done} $(($elapsed/(3600*24))) $(($elapsed%(3600*24)/3600)) $(($elapsed%3600/60)) $(($elapsed%60)) $(($remaining/(3600*24))) $(($remaining%(3600*24)/3600)) $(($remaining%3600/60)) $(($remaining%60)) $eta $ppm
 
         # log only on full percent change
         if [[ "${_done}" -gt "${last_logged_percent:-0}" ]]; then
