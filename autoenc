@@ -813,12 +813,14 @@ main() {
   sleep $(( RANDOM * 20 / 32767 ))
   duration=''
   start=$(date +%s)
-  _done=( 0 0 )
-  elapsed=( 0 0 )
+  _done=( 0 )
+  _elapsed=( 0 )
+  elapsed=0
   last_window=0
   last_logged_percent=0
-  weight=()
-  for (( i=0; i<13; i++ )); do
+  current_percent=0
+  weight=( )
+  for (( i=0; i<36; i++ )); do
     weight+=( $(echo "1000 * 0.9 ^ $i" | bc -l | awk '{printf "%.0f", $1}') )
   done
   #duration2=$(HandBrakeCLI --scan -i "$movie" 2>&1 | grep duration | grep -oE -m1 '[0-9]{2}:[0-9]{2}:[0-9]{2}' | grep -o '[0-9]*')
@@ -855,12 +857,12 @@ main() {
 
         # handle stream without overall length info
         if [[ -z "${BASH_REMATCH[3]}" ]]; then
-          _done=${BASH_REMATCH[1]}
+          current_percent=${BASH_REMATCH[1]}
         else
-          _done=$(( $(TimeToSeconds ${BASH_REMATCH[*]:1})/60 ))
+          current_percent=$(( $(TimeToSeconds ${BASH_REMATCH[*]:1})/60 ))
         fi
-        if [[ "${_done}" -gt "${_done[1]}" ]]; then
-          _done[1]=${_done}
+        if [[ "$current_percent" -gt "${last_logged_percent}" ]]; then
+          last_logged_percent=$current_percent
           Log "$line" PROGRESS
         fi
 
@@ -869,52 +871,50 @@ main() {
         # get the current percent done
         if [[ -n "$frames" ]] && [[ "$line" =~ frame=[[:space:]]*([0-9]*) ]]; then
           #LogDebug "frame ${BASH_REMATCH[1]}"
-          _done=$(( ${BASH_REMATCH[1]}*100/$frames ))
+          current_percent=$(( ${BASH_REMATCH[1]}*100/$frames ))
         elif [[ -n "$duration" ]] && [[ "$line" =~ time=([0-9]{2}):([0-9]{2}):([0-9]{2}) ]]; then
-          _done=$(( $(TimeToSeconds ${BASH_REMATCH[*]:1})*100/$duration ))
+          current_percent=$(( $(TimeToSeconds ${BASH_REMATCH[*]:1})*100/$duration ))
         else
-          _done=${BASH_REMATCH[1]}
+          current_percent=${BASH_REMATCH[1]}
         fi
         # current time spent
         elapsed=$(( $(date +%s) - start ))
         # reset counter if the precentage decreases
-        [[ ${_done} -lt ${_done[1]} ]] && {
-          _done=( $_done )
-          elapsed=( $elapsed )
+        [[ $current_percent -lt ${last_logged_percent} ]] && {
+          _done=( $current_percent )
+          _elapsed=( $elapsed )
           last_window=$elapsed
-          last_logged_percent=$_done
+          last_logged_percent=$current_percent
         }
-        # record progress at fixed time windows (every 15 seconds) for ETA computation
-        window_size=15
+        # record progress at fixed time windows (every 5 seconds) for ETA computation
+        window_size=5
         if [[ -z "${last_window}" ]] || [[ $(( elapsed - last_window )) -ge $window_size ]]; then
-          _done=( ${_done} "${_done[@]}" )
-          elapsed=( $elapsed "${elapsed[@]}" )
+          _done=( ${current_percent} "${_done[@]}" )
+          _elapsed=( ${elapsed} "${_elapsed[@]}" )
           last_window=$elapsed
-          # keep only last 12 windows (~3 minutes)
-          if [[ ${#_done[@]} -gt 13 ]]; then
-            _done=( "${_done[@]:0:13}" )
-            elapsed=( "${elapsed[@]:0:13}" )
+          # keep only last 36 windows (~3 minutes)
+          if [[ ${#_done[@]} -gt 36 ]]; then
+            _done=( "${_done[@]:0:36}" )
+            _elapsed=( "${_elapsed[@]:0:36}" )
           fi
         fi
         # compute ETA if we have enough data
         remaining=0
-        if [[ ${#_done[@]} -gt 2 ]]; then
+        if [[ ${#_done[@]} -ge 2 ]]; then
           up=0
           down=0
-          for (( i=1; i<${#_done[@]}-1; i++ )); do
-            [[ $i -gt ${#weight[@]} ]] && break
-            if [[ "${elapsed[i]}" != "${elapsed[i+1]}" ]]; then
-              up=$(( up + weight[i-1] * ( _done[i] - _done[i+1] ) * 1000 / ( elapsed[i] - elapsed[i+1] ) ))
-            fi
-            down=$(( down + weight[i-1] ))
+          for (( i=0; i<${#_done[@]}-1; i++ )); do
+            [[ $i -ge ${#weight[@]} ]] && break
+            up=$(( up + weight[i] * ( _done[i] - _done[i+1] ) * 1000 / ( _elapsed[i] - _elapsed[i+1] ) ))
+            down=$(( down + weight[i] ))
           done
           [[ $down -eq 0 ]] && down=1
-          [[ ${_done} -eq 0 || ${_done} -eq 100 ]] && {
+          [[ ${_done[0]} -eq 0 || ${_done[0]} -eq 100 ]] && {
             remaining=0
           } || {
             rate=$(( up / down ))
             [[ $rate -eq 0 ]] && rate=1
-            remaining=$(( ( 100 - _done ) * 1000 / rate ))
+            remaining=$(( ( 100 - _done[0] ) * 1000 / rate ))
           }
         fi
         eta=$(( $start + $elapsed + $remaining ))
