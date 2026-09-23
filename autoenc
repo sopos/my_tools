@@ -564,8 +564,7 @@ enc_x265_sd() { # max 852x480p, max 25fps, stereo
   local width=$(mediainfo --Inform='Video;%Width%' "$file")
   local height=$(mediainfo --Inform='Video;%Height%' "$file")
   local quality=23
-  [[ $height -le 486 ]] && quality=21
-  [[ $height -le 360 ]] && quality=20
+  [[ $height -le 360 ]] && quality=21
   local teletext=$( ffmpeg -hide_banner -i "$file" 2>&1 | grep Stream | grep teletext | grep -oE '#[0-9]:[0-9]+' | grep -oE '[0-9:]*' )
   [[ -n "$teletext" ]] && opts+="-map -$teletext"
   hdr2sdr_opts
