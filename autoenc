@@ -555,7 +555,7 @@ enc_sd() { # max 852x480p, max 25fps, stereo
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
                            -c:v libx264 -crf ${quality} -preset veryfast -r 25 \
-                           -c:a $basic_audio_codec -ac 2 -b:a 160k \
+                           -c:a $basic_audio_codec -ac 2 -b:a 128k \
                            \"$out\""
 }
 
@@ -574,7 +574,7 @@ enc_x265_sd() { # max 852x480p, max 25fps, stereo
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
-                           -c:a $basic_audio_codec -ac 2 -b:a 160k \
+                           -c:a $basic_audio_codec -ac 2 -b:a 96k \
                            \"$out\""
 }
 
@@ -594,7 +594,7 @@ enc_x265_hd2() { # max 1280x720p, max 25fps, stereo
                            -i \"$file\" -map 0 -c copy \
                            $opts ${vf:+"-vf $vf"} \
                            -c:v libx265 -crf ${quality} -preset $x265_preset -r 25 \
-                           -c:a $basic_audio_codec -ac 2 -b:a 160k \
+                           -c:a $basic_audio_codec -ac 2 -b:a 96k \
                            \"$out\""
 }
 
